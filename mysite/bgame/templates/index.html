@@ -1,0 +1,64 @@
+<h1>xx</h1>
+
+<a href='/'>Home</a>
+<br />
+
+{% if msg %}
+Latest action: {{msg}}
+{% else %}
+<br />
+{% endif %}
+
+<h4>Resources</h4>
+<table>
+    {% for res in resources %}
+        <tr>
+            <td>{{res.resourceType.name}}</td>
+            <td>{{res.amount}}</td>
+        </tr>
+    {% endfor %}
+</table>
+
+<h4>Buildings</h4>
+<table>
+    {% for b in buildings %}
+    <tr>
+        <td style="text-align:left">{{b.buildingType.name}}</td>
+        <td>{{b.quantity}}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h3>New building </h3>
+<form action='/build' method='POST'>
+    {% csrf_token %}
+    <table border=1>
+    <tr>
+        <th></th>
+        <th>Produces</th>
+        {% for r in resource_types %}
+            <th>{{r.name}}</th>
+        {% endfor %}
+        <th></th>
+    </tr>
+        
+    {% for bName, building in building_types.items %}
+        <tr>
+            <th style="text-align:left">{{bName}}</th>
+            <td>{{building.production}}</td>
+            {% for res in building.resources %}
+                <td>{{res}}</td>
+            {% endfor %}
+            <td><input type="submit" name="building_{{building.id}}" value="Build"></td>
+        </tr>
+    {% endfor %}
+    </table>
+</form>
+
+<hr>
+<h3>Admin actions</h3>
+<form action='/gameadmin' method='POST'>
+    {% csrf_token %}
+    <input type="submit" name="tick" value="Tick!">
+    <input type="submit" name="resetdb" value="Reset DB">
+</form>
