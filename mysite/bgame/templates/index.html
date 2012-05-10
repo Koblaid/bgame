@@ -1,13 +1,27 @@
+<head>
+  <title>xx</title>
+  <style type="text/css">
+  div.success { color: green }
+  div.error { color: red; }
+  </style>
+</head>
+
+
 <h1>xx</h1>
  <h3>Hello {{player.name}}</h3>
+
 <a href='/game'>Update</a> <a href='/logout'>Logout</a> 
 <br />
-
-{% if msg %}
-Latest action: {{msg}}
-{% else %}
 <br />
+
+ {% if messages %}
+{% for message in messages %}
+<div{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</div>
+{% endfor %}
+{%else%}
+<div>&nbsp;</div>
 {% endif %}
+
 
 <h4>Resources</h4>
 <table>
@@ -26,6 +40,8 @@ Latest action: {{msg}}
         <td style="text-align:left">{{b.buildingType.name}}</td>
         <td>{{b.quantity}}</td>
     </tr>
+    {% empty %}
+    No builings built yet
     {% endfor %}
 </table>
 

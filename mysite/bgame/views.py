@@ -1,15 +1,15 @@
 from django.shortcuts import render_to_response, redirect
-from django.views.decorators.csrf import csrf_protect
-from django.core.context_processors import csrf
+from django.template import RequestContext
 
 from django.contrib.auth.models import User
 from django.contrib.auth.views import login as login_view
 from django.contrib.auth import login
+from django.contrib import messages
 
 from mysite.bgame import models
 
 
-def index(request, msg=None):
+def index(request):
     if not request.user.is_authenticated():
         return redirect('/', request)
     else:
@@ -35,11 +35,9 @@ def index(request, msg=None):
         'resources': models.Player_Resource.objects.filter(player=player),
         'building_types': buildingTypes,
         'resource_types': models.ResourceType.objects.order_by(resourceOrder),
-        'msg': msg,
         'player': player,
     }
-    d.update(csrf(request))
-    return render_to_response('index.html', d)    
+    return render_to_response('index.html', d, context_instance=RequestContext(request))
 
 
 def custom_login(request):
@@ -59,22 +57,18 @@ def register(request):
         login(request, user)
         return redirect('/game', request)
     else:
-        d = {}
-        d.update(csrf(request))
-        return render_to_response('register.html', d)
+        return render_to_response('register.html', context_instance=RequestContext(request))
 
 
 def gameadmin(request):
     if 'tick' in request.POST:
         models.tick()
-        msg = 'Tick ticked!'
+        messages.success(request, 'Tick ticked!')
     elif 'resetdb' in request.POST:
         models.reset()
-        msg = 'DB resetted'
-    else:
-        msg = ''
+        messages.success(request, 'DB resetted')
     
-    return index(request, msg)
+    return redirect('/game')
         
         
 def build(request):
@@ -88,14 +82,15 @@ def build(request):
     
     building = models.BuildingType.objects.get(id=building_id)
     player = models.Player.objects.get(user=request.user)
-    print player
     res = models.addBuildingToPlayer(player, building)
+    msg = ''
     if res['success']:
-        msg = '%s was built'%building.name
+        messages.success(request, '%s was built'%building.name)
     else:
         if res['reason'] == 'not_enough_resources':
             msg = '%s could not be built, too few from %s'%(building.name, res['resource'])
+            messages.error(request, msg)
         else:
             raise Exception('Unknown reason')
         
-    return index(request, msg)
+    return redirect('/game')
