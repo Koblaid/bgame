@@ -1,4 +1,7 @@
+# Delete the tables from this model: ./manage.py sqlclear bgame |./manage.py dbshell
+
 from django.db import models
+from django.contrib.auth.models import User
 
     
 class ResourceType(models.Model):
@@ -30,6 +33,7 @@ class BuildingType_Resource(models.Model):
     
 class Player(models.Model):
     name = models.CharField(max_length=30)
+    user = models.OneToOneField(User)
     resources = models.ManyToManyField(ResourceType, through='Player_Resource')
     buildings = models.ManyToManyField(BuildingType, through='Player_Building')
     
@@ -81,18 +85,15 @@ def insertBuilding(name, production, resources):
     return obj
 
 
-def insertPlayer(name):
-    try:
-        p = Player.objects.get(name='BA')
-    except Player.DoesNotExist, e:
-        p = Player.objects.create(name='BA')
-        p.save()
+def insertPlayer(name, user):
+    p = Player.objects.create(name=name, user=user)
+    p.save()
+
+    for res in ResourceType.objects.all():
+        pr = Player_Resource(player=p, resourceType=res, amount=res.default)
+        pr.save()
         
-        for res in ResourceType.objects.all():
-            pr = Player_Resource(player=p, resourceType=res, amount=res.default)
-            pr.save()
-            
-        print '%s inserted'%name
+    print '%s inserted'%name
     return p        
 
 
@@ -115,8 +116,6 @@ def addBuildingToPlayer(player, building, alterResources=True):
 
 def alterResourcesForBuilding(player, building):
     for bRes in BuildingType_Resource.objects.filter(buildingType=building):
-        print bRes.resourceType.name
-        
         pRes = Player_Resource.objects.get(player=player, resourceType=bRes.resourceType)
         if not pRes.amount >= bRes.amount:
             return {
@@ -132,7 +131,6 @@ def alterResourcesForBuilding(player, building):
 
 
 def reset():
-    Player.objects.all().delete()
     BuildingType_Resource.objects.all().delete()
     BuildingType.objects.all().delete()
     Player_Resource.objects.all().delete()
@@ -141,14 +139,12 @@ def reset():
     wood = insertResource('Wood', 100)
     stone = insertResource('Stone', 150)
     
+    for player in Player.objects.all():
+        Player_Resource.objects.create(player=player, resourceType=wood, amount=wood.default)
+        Player_Resource.objects.create(player=player, resourceType=stone, amount=stone.default)
+
     woodcutter = insertBuilding('Woodcutter', wood, {stone: 20, wood: 15})
     quarry = insertBuilding('Quarry', stone, {stone: 10, wood: 25})
-    
-    ba = insertPlayer('BA')
-    addBuildingToPlayer(ba, woodcutter, False)
-    addBuildingToPlayer(ba, quarry, False)
-
-
 
     
 

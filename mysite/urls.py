@@ -4,7 +4,10 @@ from django.contrib import admin
 admin.autodiscover()
 
 urlpatterns = patterns('',
-    url(r'^$', 'mysite.bgame.views.index'),
+    (r'^$', 'mysite.bgame.views.custom_login'),
+    (r'^logout$', 'django.contrib.auth.views.logout', {'next_page': '/'}),
+    (r'^register$', 'mysite.bgame.views.register'),
+    url(r'^game$', 'mysite.bgame.views.index'),
     url(r'^build$', 'mysite.bgame.views.build'),
     url(r'^gameadmin$', 'mysite.bgame.views.gameadmin'),
 

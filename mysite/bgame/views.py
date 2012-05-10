@@ -2,11 +2,18 @@ from django.shortcuts import render_to_response, redirect
 from django.views.decorators.csrf import csrf_protect
 from django.core.context_processors import csrf
 
+from django.contrib.auth.models import User
+from django.contrib.auth.views import login as login_view
+from django.contrib.auth import login
+
 from mysite.bgame import models
 
 
 def index(request, msg=None):
-    ba = models.Player.objects.get(name='BA')
+    if not request.user.is_authenticated():
+        return redirect('/', request)
+    else:
+        player = models.Player.objects.get(user=request.user)
     
     resourceOrder = 'name'
     buildingTypes = {}
@@ -24,14 +31,37 @@ def index(request, msg=None):
         buildingTypes[bType.name] = bDict
         
     d = {
-        'buildings': models.Player_Building.objects.filter(player=ba),
-        'resources': models.Player_Resource.objects.filter(player=ba),
+        'buildings': models.Player_Building.objects.filter(player=player),
+        'resources': models.Player_Resource.objects.filter(player=player),
         'building_types': buildingTypes,
         'resource_types': models.ResourceType.objects.order_by(resourceOrder),
         'msg': msg,
+        'player': player,
     }
     d.update(csrf(request))
     return render_to_response('index.html', d)    
+
+
+def custom_login(request):
+    if request.user.is_authenticated():
+        return redirect('/game', request)
+    else:
+        return login_view(request, template_name='login.html')
+
+
+def register(request):
+    if request.method == "POST":
+        username = request.POST['username']
+        password = request.POST['password1']
+        user = User.objects.create_user(username, 'a@b.de', password)
+        user.backend='django.contrib.auth.backends.ModelBackend'
+        models.insertPlayer(username, user)
+        login(request, user)
+        return redirect('/game', request)
+    else:
+        d = {}
+        d.update(csrf(request))
+        return render_to_response('register.html', d)
 
 
 def gameadmin(request):
@@ -57,9 +87,9 @@ def build(request):
         raise Exception
     
     building = models.BuildingType.objects.get(id=building_id)
-    ba = models.Player.objects.get(name='BA')
-    
-    res = models.addBuildingToPlayer(ba, building)
+    player = models.Player.objects.get(user=request.user)
+    print player
+    res = models.addBuildingToPlayer(player, building)
     if res['success']:
         msg = '%s was built'%building.name
     else:
