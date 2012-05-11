@@ -22,12 +22,22 @@ class BuildingType(models.Model):
     def __unicode__(self):
         return self.name
 
+    @classmethod
+    def createBuilding(cls, name, production, resources):
+        obj = cls.objects.create(name=name, production=production)
+        obj.save()
+
+        for res, amount in resources.iteritems():
+            rb = BuildingType_Resource(buildingType=obj, resourceType=res, amount=amount)
+            rb.save()
+        return obj
+
+
 
 class BuildingType_Resource(models.Model):
     buildingType = models.ForeignKey(BuildingType)
     resourceType = models.ForeignKey(ResourceType)
     amount = models.IntegerField()
-
 
 
 
@@ -40,11 +50,66 @@ class Player(models.Model):
     def __unicode__(self):
         return self.name
 
+    def getResource(self, resourceType):
+        obj, created = Player_Resource.objects.get_or_create(resourceType=resourceType,
+                                                             player=self,
+                                                             defaults=dict(amount=resourceType.default))
+        return obj
+
+    def getResource(self, resourceType):
+        obj, created = Player_Resource.objects.get_or_create(resourceType=resourceType,
+                                                             player=self,
+                                                             defaults=dict(amount=resourceType.default))
+        return obj
+
+    def getResources(self):
+        resList = []
+        for res in ResourceType.objects.all():
+            resList.append(self.getResource(res))
+        return resList
+
+    def subtractResource(self, resourceType, amount):
+        resource = self.getResource(resourceType)
+        if not resource.amount >= amount:
+            return False
+        else:
+            resource.amount -= amount
+            resource.save()
+            return True
+
+
+    def addBuilding(self, buildingType, subtractResources=True):
+        if subtractResources:
+            res = self.subtractResourcesForBuilding(buildingType)
+            if not res['success']:
+                return res
+
+        pb, created = Player_Building.objects.get_or_create(player=self, buildingType=buildingType,
+                                                            defaults=dict(quantity=0))
+        pb.quantity += 1
+        pb.save()
+
+        return {'success': True}
+
+
+    def subtractResourcesForBuilding(self, buildingType):
+        for bRes in BuildingType_Resource.objects.filter(buildingType=buildingType):
+            subtracted = self.subtractResource(bRes.resourceType, bRes.amount)
+            if not subtracted:
+                return {
+                    'success': False,
+                    'reason': 'not_enough_resources',
+                    'resource': bRes.resourceType.name,
+                }
+
+        return {'success': True}
+
 
 class Player_Resource(models.Model):
     player = models.ForeignKey(Player)
     resourceType = models.ForeignKey(ResourceType)
     amount = models.IntegerField()
+
 
 class Player_Building(models.Model):
     player = models.ForeignKey(Player)
@@ -55,71 +120,13 @@ class Player_Building(models.Model):
 def tick():
     for player in Player.objects.all():
         for building in Player_Building.objects.filter(player=player):
-            r = Player_Resource.objects.get(player=player, resourceType=building.buildingType.production)
+            r = player.getResource(building.buildingType.production)
             r.amount += 10 * building.quantity
             r.save()
 
 
-def insertResource(name, default):
-    obj, created = ResourceType.objects.get_or_create(name=name, defaults=dict(default=default))
-    return obj
 
 
-def insertBuilding(name, production, resources):
-    try:
-        obj = BuildingType.objects.get(name=name)
-    except BuildingType.DoesNotExist, e:
-        obj = BuildingType.objects.create(name=name, production=production)
-        obj.save()
-
-        for res, amount in resources.iteritems():
-            rb = BuildingType_Resource(buildingType=obj, resourceType=res, amount=amount)
-            rb.save()
-
-        print '"%s" inserted'%name
-    return obj
-
-
-def insertPlayer(name, user):
-    p = Player.objects.create(name=name, user=user)
-    p.save()
-
-    for res in ResourceType.objects.all():
-        pr = Player_Resource(player=p, resourceType=res, amount=res.default)
-        pr.save()
-
-    print '%s inserted'%name
-    return p
-
-
-def addBuildingToPlayer(player, building, alterResources=True):
-    if alterResources:
-        res = alterResourcesForBuilding(player, building)
-        if not res['success']:
-            return res
-
-    pb, created = Player_Building.objects.get_or_create(player=player, buildingType=building,
-                                               defaults=dict(quantity=0))
-    pb.quantity += 1
-    pb.save()
-
-    return {'success': True}
-
-
-def alterResourcesForBuilding(player, building):
-    for bRes in BuildingType_Resource.objects.filter(buildingType=building):
-        pRes = Player_Resource.objects.get(player=player, resourceType=bRes.resourceType)
-        if not pRes.amount >= bRes.amount:
-            return {
-                'success': False,
-                'reason': 'not_enough_resources',
-                'resource': bRes.resourceType.name,
-            }
-        else:
-            pRes.amount -= bRes.amount
-            pRes.save()
-
-    return {'success': True}
 
 
 def reset():
@@ -128,15 +135,11 @@ def reset():
     Player_Resource.objects.all().delete()
     ResourceType.objects.all().delete()
 
-    wood = insertResource('Wood', 100)
-    stone = insertResource('Stone', 150)
+    wood, created = ResourceType.objects.get_or_create(name='Wood', default=100)
+    stone, created = ResourceType.objects.get_or_create(name='Stone', default=150)
 
-    for player in Player.objects.all():
-        Player_Resource.objects.create(player=player, resourceType=wood, amount=wood.default)
-        Player_Resource.objects.create(player=player, resourceType=stone, amount=stone.default)
-
-    woodcutter = insertBuilding('Woodcutter', wood, {stone: 20, wood: 15})
-    quarry = insertBuilding('Quarry', stone, {stone: 10, wood: 25})
+    woodcutter = BuildingType.createBuilding('Woodcutter', wood, {stone: 20, wood: 15})
+    quarry = BuildingType.createBuilding('Quarry', stone, {stone: 10, wood: 25})
 
 
 

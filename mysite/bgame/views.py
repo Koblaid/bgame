@@ -14,7 +14,7 @@ def index(request):
         return redirect('/', request)
     else:
         player = get_object_or_404(models.Player, user=request.user)
-    
+
     resourceOrder = 'name'
     buildingTypes = {}
     for bType in models.BuildingType.objects.all():
@@ -22,14 +22,17 @@ def index(request):
         bDict['id'] = bType.id
         bDict['production'] = bType.production.name
         bDict['resources'] = []
-        
+
         for res in models.ResourceType.objects.order_by(resourceOrder):
-            bDict['resources'].append(
-                models.BuildingType_Resource.objects.get(buildingType=bType ,resourceType=res).amount
-            )
-            
+            try:
+                bDict['resources'].append(
+                    models.BuildingType_Resource.objects.get(buildingType=bType ,resourceType=res).amount
+                )
+            except models.BuildingType_Resource.DoesNotExist:
+                bDict['resources'].append(0)
+
         buildingTypes[bType.name] = bDict
-        
+
     d = {
         'buildings': models.Player_Building.objects.filter(player=player),
         'resources': models.Player_Resource.objects.filter(player=player),
@@ -53,7 +56,7 @@ def register(request):
         password = request.POST['password1']
         user = User.objects.create_user(username, 'a@b.de', password)
         user.backend='django.contrib.auth.backends.ModelBackend'
-        models.insertPlayer(username, user)
+        models.Player.objects.create(name=username, user=user)
         login(request, user)
         return redirect('/game', request)
     else:
@@ -67,22 +70,22 @@ def gameadmin(request):
     elif 'resetdb' in request.POST:
         models.reset()
         messages.success(request, 'DB resetted')
-    
+
     return redirect('/game')
-        
-        
+
+
 def build(request):
     building_id = None
     for k in request.POST:
         if k.startswith('building_'):
             building_id = int(k.split('_')[1])
-    
+
     if building_id is None:
         raise Exception
-    
+
     building = get_object_or_404(models.BuildingType, id=building_id)
     player = get_object_or_404(models.Player, user=request.user)
-    res = models.addBuildingToPlayer(player, building)
+    res = player.addBuilding(building)
     msg = ''
     if res['success']:
         messages.success(request, '%s was built'%building.name)
@@ -92,5 +95,5 @@ def build(request):
             messages.error(request, msg)
         else:
             raise Exception('Unknown reason')
-        
+
     return redirect('/game')
