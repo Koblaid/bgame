@@ -2,6 +2,7 @@
 
 from django.db import models
 from django.contrib.auth.models import User
+from django.db import transaction
 
 
 class ResourceType(models.Model):
@@ -93,7 +94,8 @@ class Player(models.Model):
 
 
     def subtractResourcesForBuilding(self, buildingType):
-        for bRes in BuildingType_Resource.objects.filter(buildingType=buildingType):
+        assert transaction.is_managed()
+        for bRes in BuildingType_Resource.objects.select_for_update().filter(buildingType=buildingType):
             subtracted = self.subtractResource(bRes.resourceType, bRes.amount)
             if not subtracted:
                 return {
