@@ -3,49 +3,49 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-    
+
 class ResourceType(models.Model):
     name = models.CharField(max_length=30, unique=True)
     default = models.IntegerField()
 
     def __unicode__(self):
         return self.name
-    
+
 
 
 class BuildingType(models.Model):
     name = models.CharField(max_length=30, unique=True)
     production = models.ForeignKey(ResourceType, related_name='production')
-    
+
     resources = models.ManyToManyField(ResourceType, through='BuildingType_Resource')
 
     def __unicode__(self):
         return self.name
 
-    
+
 class BuildingType_Resource(models.Model):
     buildingType = models.ForeignKey(BuildingType)
     resourceType = models.ForeignKey(ResourceType)
     amount = models.IntegerField()
-    
 
 
-    
+
+
 class Player(models.Model):
     name = models.CharField(max_length=30)
     user = models.OneToOneField(User)
     resources = models.ManyToManyField(ResourceType, through='Player_Resource')
     buildings = models.ManyToManyField(BuildingType, through='Player_Building')
-    
+
     def __unicode__(self):
-        return self.name    
+        return self.name
 
 
 class Player_Resource(models.Model):
     player = models.ForeignKey(Player)
     resourceType = models.ForeignKey(ResourceType)
     amount = models.IntegerField()
-    
+
 class Player_Building(models.Model):
     player = models.ForeignKey(Player)
     buildingType = models.ForeignKey(BuildingType)
@@ -61,12 +61,7 @@ def tick():
 
 
 def insertResource(name, default):
-    try:
-        obj = ResourceType.objects.get(name=name)
-    except ResourceType.DoesNotExist, e:
-        obj = ResourceType.objects.create(name=name, default=default)
-        obj.save()
-        print '"%s" inserted'%name
+    obj, created = ResourceType.objects.get_or_create(name=name, defaults=dict(default=default))
     return obj
 
 
@@ -76,11 +71,11 @@ def insertBuilding(name, production, resources):
     except BuildingType.DoesNotExist, e:
         obj = BuildingType.objects.create(name=name, production=production)
         obj.save()
-        
+
         for res, amount in resources.iteritems():
             rb = BuildingType_Resource(buildingType=obj, resourceType=res, amount=amount)
             rb.save()
-            
+
         print '"%s" inserted'%name
     return obj
 
@@ -92,9 +87,9 @@ def insertPlayer(name, user):
     for res in ResourceType.objects.all():
         pr = Player_Resource(player=p, resourceType=res, amount=res.default)
         pr.save()
-        
+
     print '%s inserted'%name
-    return p        
+    return p
 
 
 def addBuildingToPlayer(player, building, alterResources=True):
@@ -102,31 +97,28 @@ def addBuildingToPlayer(player, building, alterResources=True):
         res = alterResourcesForBuilding(player, building)
         if not res['success']:
             return res
-    
-    try:
-        pb = Player_Building.objects.get(player=player, buildingType=building)
-    except Player_Building.DoesNotExist, e:
-        pb = Player_Building.objects.create(player=player, buildingType=building, quantity=0)
-        
+
+    pb, created = Player_Building.objects.get_or_create(player=player, buildingType=building,
+                                               defaults=dict(quantity=0))
     pb.quantity += 1
     pb.save()
-    
+
     return {'success': True}
-    
+
 
 def alterResourcesForBuilding(player, building):
     for bRes in BuildingType_Resource.objects.filter(buildingType=building):
         pRes = Player_Resource.objects.get(player=player, resourceType=bRes.resourceType)
         if not pRes.amount >= bRes.amount:
             return {
-                'success': False, 
-                'reason': 'not_enough_resources', 
+                'success': False,
+                'reason': 'not_enough_resources',
                 'resource': bRes.resourceType.name,
             }
         else:
             pRes.amount -= bRes.amount
             pRes.save()
-    
+
     return {'success': True}
 
 
@@ -135,10 +127,10 @@ def reset():
     BuildingType.objects.all().delete()
     Player_Resource.objects.all().delete()
     ResourceType.objects.all().delete()
-    
+
     wood = insertResource('Wood', 100)
     stone = insertResource('Stone', 150)
-    
+
     for player in Player.objects.all():
         Player_Resource.objects.create(player=player, resourceType=wood, amount=wood.default)
         Player_Resource.objects.create(player=player, resourceType=stone, amount=stone.default)
@@ -146,7 +138,7 @@ def reset():
     woodcutter = insertBuilding('Woodcutter', wood, {stone: 20, wood: 15})
     quarry = insertBuilding('Quarry', stone, {stone: 10, wood: 25})
 
-    
+
 
 '''
 create table building_type (
@@ -155,14 +147,14 @@ create table building_type (
   longhouse_lvl            int,
   max_lvl			       int,
   people_working_per_lvl   int,
-  
+
   -- allowedMaxLvl = thisFactor * currentLvl
   longhouse_diff_factor    int,
-  
+
   -- produktion mit einer ausbaustufe pro arbeiter
   base_production          int,
   -- produktion = anzahl der arbeiter * base_produktion
-   
+
   max_building_count       int,
   building_time            int
 );
@@ -184,7 +176,7 @@ create table resource (
 create table building_resource (
   building_id          int,
   resource_id          int,
-  
+
   -- ab diesem lvl wird der rohstoff benoetigt
   start_lvl            int,
   -- mit diesem factor wird der rohstoffbedarf pro lvl berechnet

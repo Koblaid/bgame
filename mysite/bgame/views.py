@@ -1,4 +1,4 @@
-from django.shortcuts import render_to_response, redirect
+from django.shortcuts import render_to_response, redirect, get_object_or_404
 from django.template import RequestContext
 
 from django.contrib.auth.models import User
@@ -13,7 +13,7 @@ def index(request):
     if not request.user.is_authenticated():
         return redirect('/', request)
     else:
-        player = models.Player.objects.get(user=request.user)
+        player = get_object_or_404(models.Player, user=request.user)
     
     resourceOrder = 'name'
     buildingTypes = {}
@@ -80,8 +80,8 @@ def build(request):
     if building_id is None:
         raise Exception
     
-    building = models.BuildingType.objects.get(id=building_id)
-    player = models.Player.objects.get(user=request.user)
+    building = get_object_or_404(models.BuildingType, id=building_id)
+    player = get_object_or_404(models.Player, user=request.user)
     res = models.addBuildingToPlayer(player, building)
     msg = ''
     if res['success']:
