@@ -79,6 +79,20 @@ class Player(models.Model):
             return True
 
 
+    def subtractResourcesForBuilding(self, buildingType):
+        assert transaction.is_managed()
+        for bRes in BuildingType_Resource.objects.select_for_update().filter(buildingType=buildingType):
+            subtracted = self.subtractResource(bRes.resourceType, bRes.amount)
+            if not subtracted:
+                return {
+                    'success': False,
+                    'reason': 'not_enough_resources',
+                    'resource': bRes.resourceType.name,
+                }
+
+        return {'success': True}
+
+
     def addBuilding(self, buildingType, subtractResources=True):
         if subtractResources:
             res = self.subtractResourcesForBuilding(buildingType)
@@ -92,19 +106,6 @@ class Player(models.Model):
 
         return {'success': True}
 
-
-    def subtractResourcesForBuilding(self, buildingType):
-        assert transaction.is_managed()
-        for bRes in BuildingType_Resource.objects.select_for_update().filter(buildingType=buildingType):
-            subtracted = self.subtractResource(bRes.resourceType, bRes.amount)
-            if not subtracted:
-                return {
-                    'success': False,
-                    'reason': 'not_enough_resources',
-                    'resource': bRes.resourceType.name,
-                }
-
-        return {'success': True}
 
 
 class Player_Resource(models.Model):
