@@ -6,11 +6,11 @@
   </style>
 </head>
 
-
+<body>
 <h1>xx</h1>
  <h3>Hello {{player.name}}</h3>
 
-<a href='/game'>Update</a> <a href='/logout'>Logout</a> 
+<a href='/game'>Update</a> <a href='/logout'>Logout</a>
 <br />
 <br />
 
@@ -57,12 +57,12 @@
         {% endfor %}
         <th></th>
     </tr>
-        
+
     {% for bName, building in building_types.items %}
         <tr>
             <th style="text-align:left">{{bName}}</th>
             <td>{{building.production}}</td>
-            {% for res in building.resources %}
+            {% for res in building.resources.values %}
                 <td>{{res}}</td>
             {% endfor %}
             <td><input type="submit" name="building_{{building.id}}" value="Build"></td>
@@ -78,3 +78,4 @@
     <input type="submit" name="tick" value="Tick!">
     <input type="submit" name="resetdb" value="Reset DB">
 </form>
+</body>
