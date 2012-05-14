@@ -69,21 +69,21 @@ class Player(models.Model):
             resList.append(self.getResource(res))
         return resList
 
-    def subtractResource(self, resourceType, amount):
+    def changeResourceAmount(self, resourceType, amount):
         resource = self.getResource(resourceType)
-        if not resource.amount >= amount:
-            return False
+        if not resource.amount+amount >= 0:
+            return {'success': False}
         else:
-            resource.amount -= amount
+            resource.amount += amount
             resource.save()
-            return True
+            return {'success': True}
 
 
     def subtractResourcesForBuilding(self, buildingType):
         assert transaction.is_managed()
         for bRes in BuildingType_Resource.objects.select_for_update().filter(buildingType=buildingType):
-            subtracted = self.subtractResource(bRes.resourceType, bRes.amount)
-            if not subtracted:
+            result = self.changeResourceAmount(bRes.resourceType, bRes.amount*-1)
+            if not result['success']:
                 return {
                     'success': False,
                     'reason': 'not_enough_resources',
@@ -123,9 +123,9 @@ class Player_Building(models.Model):
 def tick():
     for player in Player.objects.all():
         for building in Player_Building.objects.filter(player=player):
-            r = player.getResource(building.buildingType.production)
-            r.amount += 10 * building.quantity
-            r.save()
+            amount = 10 * building.quantity
+            result = player.changeResourceAmount(building.buildingType.production, amount)
+            assert(result['success'])
 
 
 
