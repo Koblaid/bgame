@@ -1,5 +1,12 @@
 # Django settings for mysite project.
 
+try:
+    import debug_toolbar
+except:
+    print 'debug_toolbar not available!'
+    debug_toolbar = None
+
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
@@ -90,17 +97,21 @@ TEMPLATE_LOADERS = (
 #     'django.template.loaders.eggs.Loader',
 )
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE_CLASSES = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.middleware.transaction.TransactionMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
+    #'debug_toolbar.middleware.DebugToolbarMiddleware',
     # Uncomment the next line for simple clickjacking protection:
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
-)
+]
+
+if debug_toolbar:
+    MIDDLEWARE_CLASSES.append('debug_toolbar.middleware.DebugToolbarMiddleware')
+
 
 ROOT_URLCONF = 'mysite.urls'
 
@@ -114,7 +125,7 @@ TEMPLATE_DIRS = (
     '/home/benjamin/meins/djtest/mysite/mysite/bgame/templates',
 )
 
-INSTALLED_APPS = (
+INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -122,11 +133,12 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.admin',
-    'debug_toolbar',
-    # Uncomment the next line to enable admin documentation:
-    # 'django.contrib.admindocs',
+    'django.contrib.admindocs',
+    #'debug_toolbar',
     'mysite.bgame',
-)
+]
+if debug_toolbar:
+    INSTALLED_APPS.append('debug_toolbar')
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
