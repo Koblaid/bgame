@@ -288,7 +288,7 @@ class FunctionalTests(WebTest, TestTools):
 
         # Checks
         res = res.follow()
-        self.assertContains(res, 'class="success"')
+        self.assertContains(res, 'dj_msg success')
         self.assertEqual(20, ben.getResource(wood).amount)
 
     def test_build(self):
@@ -304,7 +304,7 @@ class FunctionalTests(WebTest, TestTools):
 
         # Checks
         res = res.follow()
-        self.assertContains(res, 'class="success"')
+        self.assertContains(res, 'dj_msg success')
         buildings = M.Player_Building.objects.filter(player=ben)
         self.assertEqual(1, len(buildings))
         self.assertEqual('Woodcutter', buildings[0].buildingType.name)
@@ -322,7 +322,7 @@ class FunctionalTests(WebTest, TestTools):
 
         # Checks
         res = res.follow()
-        self.assertContains(res, 'class="error"')
+        self.assertContains(res, 'dj_msg error')
         buildings = M.Player_Building.objects.filter(player=ben)
         self.assertEqual(0, len(buildings))
 

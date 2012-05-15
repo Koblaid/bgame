@@ -1,4 +1,5 @@
 # Django settings for mysite project.
+from django.contrib.messages import constants as messages
 
 try:
     import debug_toolbar
@@ -173,3 +174,12 @@ LOGGING = {
 LOGIN_REDIRECT_URL = '/game'
 
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
+
+msgTag = 'dj_msg '
+MESSAGE_TAGS = {
+    messages.DEBUG: msgTag+'debug',
+    messages.INFO: msgTag+'info',
+    messages.SUCCESS: msgTag+'success',
+    messages.WARNING: msgTag+'warning',
+    messages.ERROR: msgTag+'error',
+}
