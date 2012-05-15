@@ -77,7 +77,7 @@ class Player(models.Model):
             resource.amount += amount
             resource.save()
             return {'success': True}
-
+    changeResourceAmount.alters_data = True
 
     def subtractResourcesForBuilding(self, buildingType):
         assert transaction.is_managed()
@@ -91,6 +91,7 @@ class Player(models.Model):
                 }
 
         return {'success': True}
+    subtractResourcesForBuilding.alters_data = True
 
 
     def addBuilding(self, buildingType, subtractResources=True):
@@ -105,6 +106,7 @@ class Player(models.Model):
         pb.save()
 
         return {'success': True}
+    addBuilding.alters_data = True
 
 
 
