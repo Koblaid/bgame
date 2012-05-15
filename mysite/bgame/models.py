@@ -33,6 +33,38 @@ class BuildingType(models.Model):
             rb.save()
         return obj
 
+    @classmethod
+    def getBuildingDetails(cls):
+        '''
+        select b.name, b.id, r2.name, r.name, br.amount
+
+        from bgame_resourcetype r
+        join bgame_buildingtype_resource br on r.id = br.resourcetype_id
+        join bgame_buildingtype b on b.id = br.buildingtype_id
+        join bgame_resourcetype r2 on b.production_id = r2.id
+        order by b.name
+        '''
+
+        buildingTypes = []
+        for bType in cls.objects.all():
+            resList = []
+            for res in ResourceType.objects.all():
+                try:
+                    amount = BuildingType_Resource.objects.get(buildingType=bType ,resourceType=res).amount
+                except BuildingType_Resource.DoesNotExist:
+                    amount = 0
+                resList.append(dict(
+                    name=res.name,
+                    amount=amount
+                ))
+
+            buildingTypes.append(dict(
+                name = bType.name,
+                id = bType.id,
+                production = bType.production.name,
+                resources = resList
+            ))
+        return buildingTypes
 
 
 class BuildingType_Resource(models.Model):

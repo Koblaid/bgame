@@ -49,21 +49,22 @@
 <form action='/build' method='POST'>
     {% csrf_token %}
     <table border=1>
-    <tr>
-        <th></th>
-        <th>Produces</th>
-        {% for r in resource_types %}
-            <th>{{r.name}}</th>
-        {% endfor %}
-        <th></th>
-    </tr>
+    {% for building in building_types|dictsort:"name" %}
 
-    {% for bName, building in building_types.items %}
+        {% if forloop.first %}
+            <th></th>
+            <th>Produces</th>
+            {% for res in building.resources|dictsort:"name" %}
+                <th>{{res.name}}</th>
+            {% endfor %}
+            <th></th>
+        {% endif %}
+
         <tr>
-            <th style="text-align:left">{{bName}}</th>
+            <th style="text-align:left">{{building.name}}</th>
             <td>{{building.production}}</td>
-            {% for res in building.resources.values %}
-                <td>{{res}}</td>
+            {% for res in building.resources|dictsort:"name" %}
+                <td>{{res.amount}}</td>
             {% endfor %}
             <td><input type="submit" name="building_{{building.id}}" value="Build"></td>
         </tr>

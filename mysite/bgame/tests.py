@@ -1,4 +1,6 @@
-from django.test import TestCase
+from django.test import TestCase as Dj_TestCase
+from django.utils.unittest import TestCase
+from django.test.client import RequestFactory
 
 from django.contrib.auth.models import User
 
@@ -34,7 +36,7 @@ class TestTools(object):
 
 
 
-class Test_Player_AddBuilding(TestCase, TestTools):
+class Test_Player_AddBuilding(Dj_TestCase, TestTools):
     def setUp(self):
         self.wood, self.stone = self.createResources(('Wood', 0), ('Stone', 0))
         self.woodcutter = M.BuildingType.createBuilding('Woodcutter', self.wood, {self.wood: 10, self.stone:50})
@@ -100,7 +102,37 @@ class Test_Player_AddBuilding(TestCase, TestTools):
 
 
 
-class Test_Player_changeResourceAmount(TestCase, TestTools):
+
+class Test_BuildingType_getBuildingDetails(Dj_TestCase, TestTools):
+    def test_(self):
+        wood, stone = self.createResources(('Wood', 0), ('Stone', 0))
+        woodcutter = M.BuildingType.createBuilding('Woodcutter', wood, {wood: 10, stone:50})
+        quarry = M.BuildingType.createBuilding('Quarry', stone, {wood: 100})
+        details = M.BuildingType.getBuildingDetails()
+        self.assertEqual(2, len(details))
+
+        expected = [
+            dict(
+                id=woodcutter.id,
+                name='Woodcutter',
+                production='Wood',
+                resources=[
+                    dict(name='Wood', amount=10),
+                    dict(name='Stone', amount=50),
+                ]),
+            dict(
+                id=quarry.id,
+                name='Quarry',
+                production='Stone',
+                resources=[
+                    dict(name='Wood', amount=100),
+                    dict(name='Stone', amount=0),
+                ]),
+        ]
+        self.assertEqual(details, expected)
+
+
+class Test_Player_changeResourceAmount(Dj_TestCase, TestTools):
     def setUp(self):
         self.wood, self.stone = self.createResources(('Wood', 100), ('Stone', 150))
         self.player = self.createPlayer('Ben')
@@ -129,7 +161,7 @@ class Test_Player_changeResourceAmount(TestCase, TestTools):
 
 
 
-class ModelTests(TestCase, TestTools):
+class ModelTests(Dj_TestCase, TestTools):
     def test_buildingType_createBuilding(self):
         wood, stone = self.createResources(('Wood', 100), ('Stone', 150))
 
@@ -196,3 +228,10 @@ class ModelTests(TestCase, TestTools):
         self.assertEqual(0, ben2.getResource(wood).amount)
         self.assertEqual(0, ben2.getResource(stone).amount)
 
+
+#class ViewTests(TestCase):
+    #def test_details(self):
+        #request = self.factory.get('/customer/details')
+
+        #response = my_view(request)
+        #self.assertEqual(response.status_code, 200)

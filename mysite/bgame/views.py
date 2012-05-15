@@ -6,38 +6,19 @@ from django.contrib.auth.views import login as login_view
 from django.contrib.auth import login
 from django.contrib import messages
 
-from mysite.bgame import models
+from mysite.bgame import models as M
 
 
 def index(request):
     if not request.user.is_authenticated():
         return redirect('/', request)
     else:
-        player = get_object_or_404(models.Player, user=request.user)
-
-    resourceOrder = 'name'
-    buildingTypes = {}
-    for bType in models.BuildingType.objects.all():
-        bDict = {}
-        bDict['id'] = bType.id
-        bDict['production'] = bType.production.name
-        bDict['resources'] = []
-
-        for res in models.ResourceType.objects.order_by(resourceOrder):
-            try:
-                bDict['resources'].append(
-                    models.BuildingType_Resource.objects.get(buildingType=bType ,resourceType=res).amount
-                )
-            except models.BuildingType_Resource.DoesNotExist:
-                bDict['resources'].append(0)
-
-        buildingTypes[bType.name] = bDict
+        player = get_object_or_404(M.Player, user=request.user)
 
     d = {
-        'buildings': models.Player_Building.objects.filter(player=player),
-        'resources': models.Player_Resource.objects.filter(player=player),
-        'building_types': buildingTypes,
-        'resource_types': models.ResourceType.objects.order_by(resourceOrder),
+        'buildings': M.Player_Building.objects.filter(player=player),
+        'resources': M.Player_Resource.objects.filter(player=player),
+        'building_types': M.BuildingType.getBuildingDetails(),
         'player': player,
     }
     return render_to_response('index.html', d, context_instance=RequestContext(request))
@@ -56,7 +37,7 @@ def register(request):
         password = request.POST['password1']
         user = User.objects.create_user(username, 'a@b.de', password)
         user.backend='django.contrib.auth.backends.ModelBackend'
-        models.Player.objects.create(name=username, user=user)
+        M.Player.objects.create(name=username, user=user)
         login(request, user)
         return redirect('/game', request)
     else:
@@ -65,10 +46,10 @@ def register(request):
 
 def gameadmin(request):
     if 'tick' in request.POST:
-        models.tick()
+        M.tick()
         messages.success(request, 'Tick ticked!')
     elif 'resetdb' in request.POST:
-        models.reset()
+        M.reset()
         messages.success(request, 'DB resetted')
 
     return redirect('/game')
@@ -83,8 +64,8 @@ def build(request):
     if building_id is None:
         raise Exception
 
-    building = get_object_or_404(models.BuildingType, id=building_id)
-    player = get_object_or_404(models.Player, user=request.user)
+    building = get_object_or_404(M.BuildingType, id=building_id)
+    player = get_object_or_404(M.Player, user=request.user)
     res = player.addBuilding(building)
     msg = ''
     if res['success']:
