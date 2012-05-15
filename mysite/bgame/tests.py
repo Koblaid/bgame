@@ -162,6 +162,45 @@ class Test_Player_changeResourceAmount(Dj_TestCase, TestTools):
 
 
 
+
+class Test_Tick(Dj_TestCase, TestTools):
+    def test_empty(self):
+        M.tick()
+
+    def test_withoutBuildings(self):
+        ben1 = self.createPlayer('Ben1')
+        M.tick()
+
+    def test_tick(self):
+        wood, stone = self.createResources(('Wood', 0), ('Stone', 0))
+        woodcutter = M.BuildingType.createBuilding('Woodcutter', wood, {wood: 10, stone:50})
+        quarry = M.BuildingType.createBuilding('Quarry', stone, {wood: 100, stone:30})
+
+        ben1 = self.createPlayer('Ben1')
+
+        result = ben1.addBuilding(woodcutter, subtractResources=False)
+        self.assertSuccess(result)
+        result = ben1.addBuilding(woodcutter, subtractResources=False)
+        self.assertSuccess(result)
+
+        result = ben1.addBuilding(quarry, subtractResources=False)
+        self.assertSuccess(result)
+        result = ben1.addBuilding(quarry, subtractResources=False)
+        self.assertSuccess(result)
+        result = ben1.addBuilding(quarry, subtractResources=False)
+        self.assertSuccess(result)
+
+        ben2 = self.createPlayer('Ben2')
+
+        M.tick()
+
+        self.assertEqual(10+10, ben1.getResource(wood).amount)
+        self.assertEqual(10+10+10, ben1.getResource(stone).amount)
+
+        self.assertEqual(0, ben2.getResource(wood).amount)
+        self.assertEqual(0, ben2.getResource(stone).amount)
+
+
 class ModelTests(Dj_TestCase, TestTools):
     def test_buildingType_createBuilding(self):
         wood, stone = self.createResources(('Wood', 100), ('Stone', 150))
@@ -200,34 +239,7 @@ class ModelTests(Dj_TestCase, TestTools):
         self.assertEqual(2, len(M.Player_Resource.objects.filter(player=player)))
 
 
-    def test_tick(self):
-        wood, stone = self.createResources(('Wood', 0), ('Stone', 0))
-        woodcutter = M.BuildingType.createBuilding('Woodcutter', wood, {wood: 10, stone:50})
-        quarry = M.BuildingType.createBuilding('Quarry', stone, {wood: 100, stone:30})
 
-        ben1 = self.createPlayer('Ben1')
-
-        result = ben1.addBuilding(woodcutter, subtractResources=False)
-        self.assertSuccess(result)
-        result = ben1.addBuilding(woodcutter, subtractResources=False)
-        self.assertSuccess(result)
-
-        result = ben1.addBuilding(quarry, subtractResources=False)
-        self.assertSuccess(result)
-        result = ben1.addBuilding(quarry, subtractResources=False)
-        self.assertSuccess(result)
-        result = ben1.addBuilding(quarry, subtractResources=False)
-        self.assertSuccess(result)
-
-        ben2 = self.createPlayer('Ben2')
-
-        M.tick()
-
-        self.assertEqual(10+10, ben1.getResource(wood).amount)
-        self.assertEqual(10+10+10, ben1.getResource(stone).amount)
-
-        self.assertEqual(0, ben2.getResource(wood).amount)
-        self.assertEqual(0, ben2.getResource(stone).amount)
 
 
 
