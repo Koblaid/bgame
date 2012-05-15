@@ -183,3 +183,8 @@ MESSAGE_TAGS = {
     messages.WARNING: msgTag+'warning',
     messages.ERROR: msgTag+'error',
 }
+
+
+DEBUG_TOOLBAR_CONFIG = dict(
+    INTERCEPT_REDIRECTS=False
+)
