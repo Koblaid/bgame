@@ -8,3 +8,5 @@ BGame
 6. Open your browser at http://localhost:8000 for the game or http://localhost:8000/admin for the admin interface
 
 Optionally install django-debug-toolbar
+
+To run the tests [WebTest](http://webtest.pythonpaste.org/) and [django-webtest](http://pypi.python.org/pypi/django-webtest) are required.

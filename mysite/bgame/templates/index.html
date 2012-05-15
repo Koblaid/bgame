@@ -46,7 +46,7 @@
 </table>
 
 <h3>New building </h3>
-<form action='/build' method='POST'>
+<form action='/build' method='POST' id='build'>
     {% csrf_token %}
     <table border=1>
     {% for building in building_types|dictsort:"name" %}
@@ -74,7 +74,7 @@
 
 <hr>
 <h3>Admin actions</h3>
-<form action='/gameadmin' method='POST'>
+<form action='/gameadmin' method='POST' id='gameadmin'>
     {% csrf_token %}
     <input type="submit" name="tick" value="Tick!">
     <input type="submit" name="resetdb" value="Reset DB">

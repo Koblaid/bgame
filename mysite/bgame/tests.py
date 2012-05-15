@@ -1,8 +1,9 @@
 from django.test import TestCase as Dj_TestCase
 from django.utils.unittest import TestCase
 from django.test.client import RequestFactory
-
 from django.contrib.auth.models import User
+
+from django_webtest import WebTest
 
 import models as M
 
@@ -23,8 +24,8 @@ class TestTools(object):
         self.assertDict(False, d, 'success')
 
 
-    def createPlayer(self, name):
-        user = User.objects.create_user(name, 'a@b.de', None)
+    def createPlayer(self, name, password=None):
+        user = User.objects.create_user(name, 'a@b.de', password)
         return M.Player.objects.create(name=name, user=user)
 
 
@@ -229,9 +230,99 @@ class ModelTests(Dj_TestCase, TestTools):
         self.assertEqual(0, ben2.getResource(stone).amount)
 
 
-#class ViewTests(TestCase):
-    #def test_details(self):
-        #request = self.factory.get('/customer/details')
 
-        #response = my_view(request)
-        #self.assertEqual(response.status_code, 200)
+class FunctionalTests(WebTest, TestTools):
+    def test_index(self):
+        request = self.app.get('/')
+        self.assertTemplateUsed(request, 'login.html')
+
+    def test_bgame_withoutLogin(self):
+        request = self.app.get('/game')
+        self.assertRedirects(request, '/')
+
+    def test_login_error(self):
+        form = self.app.get('/').form
+        form['username'] = 'XXX'
+        form['password'] = 'YYY'
+        res = form.submit()
+        self.assertIn("Your username and password didn't match. Please try again.", res)
+
+    def test_login_success(self):
+        self.createPlayer('Ben', 'xxx')
+        form = self.app.get('/').form
+        form['username'] = 'Ben'
+        form['password'] = 'xxx'
+        res1 = form.submit()
+        res2 = res1.follow()
+        self.assertTemplateUsed(res2, 'index.html')
+
+    def test_logout(self):
+        self.createPlayer('Ben', 'xxx')
+        res1 = self.app.get('/game', user='Ben')
+        res2 = res1.click(href='/logout')
+        res3 = res2.follow()
+        self.assertTemplateUsed(res3, 'login.html')
+
+    def test_registration_login(self):
+        form = self.app.get('/register').form
+        form['username'] = 'Ben'
+        form['password1'] = 'yyy'
+        res1 = form.submit()
+        res2 = res1.follow()
+        self.assertTemplateUsed(res2, 'index.html')
+
+    def test_tick(self):
+        # Prepare
+        wood, stone = self.createResources(('Wood', 0), ('Stone', 0))
+        woodcutter = M.BuildingType.createBuilding('Woodcutter', wood, {wood: 10, stone:50})
+        ben = self.createPlayer('Ben')
+        res = ben.addBuilding(woodcutter, subtractResources=False)
+        self.assertSuccess(res)
+        res = ben.addBuilding(woodcutter, subtractResources=False)
+        self.assertSuccess(res)
+
+        # Form submit
+        res = self.app.get('/game', user='Ben')
+        form = res.forms['gameadmin']
+        res = form.submit('tick')
+
+        # Checks
+        res = res.follow()
+        self.assertContains(res, 'class="success"')
+        self.assertEqual(20, ben.getResource(wood).amount)
+
+    def test_build(self):
+        # Prepare
+        wood, stone = self.createResources(('Wood', 10), ('Stone', 50))
+        woodcutter = M.BuildingType.createBuilding('Woodcutter', wood, {wood: 10, stone:50})
+        ben = self.createPlayer('Ben')
+
+        # Form submit
+        res = self.app.get('/game', user='Ben')
+        form = res.forms['build']
+        res = form.submit('building_1')
+
+        # Checks
+        res = res.follow()
+        self.assertContains(res, 'class="success"')
+        buildings = M.Player_Building.objects.filter(player=ben)
+        self.assertEqual(1, len(buildings))
+        self.assertEqual('Woodcutter', buildings[0].buildingType.name)
+
+    def test_build_error(self):
+        # Prepare
+        wood, stone = self.createResources(('Wood', 0), ('Stone', 0))
+        woodcutter = M.BuildingType.createBuilding('Woodcutter', wood, {wood: 10, stone:50})
+        ben = self.createPlayer('Ben')
+
+        # Form submit
+        res = self.app.get('/game', user='Ben')
+        form = res.forms['build']
+        res = form.submit('building_1')
+
+        # Checks
+        res = res.follow()
+        self.assertContains(res, 'class="error"')
+        buildings = M.Player_Building.objects.filter(player=ben)
+        self.assertEqual(0, len(buildings))
+
