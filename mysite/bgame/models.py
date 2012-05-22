@@ -16,7 +16,7 @@ class ResourceType(models.Model):
 
 class BuildingType(models.Model):
     name = models.CharField(max_length=30, unique=True)
-    production = models.ForeignKey(ResourceType, related_name='production')
+    production = models.ForeignKey(ResourceType, verbose_name='Resource production', related_name='production')
 
     resources = models.ManyToManyField(ResourceType, through='BuildingType_Resource')
 
@@ -68,9 +68,15 @@ class BuildingType(models.Model):
 
 
 class BuildingType_Resource(models.Model):
+    class Meta:
+        verbose_name = "Building cost"
+
     buildingType = models.ForeignKey(BuildingType)
-    resourceType = models.ForeignKey(ResourceType)
+    resourceType = models.ForeignKey(ResourceType, verbose_name = 'Resource')
     amount = models.IntegerField()
+
+    def __unicode__(self):
+        return ''
 
 
 
@@ -143,15 +149,27 @@ class Player(models.Model):
 
 
 class Player_Resource(models.Model):
+    class Meta:
+        verbose_name = 'Resource'
+
     player = models.ForeignKey(Player)
-    resourceType = models.ForeignKey(ResourceType)
+    resourceType = models.ForeignKey(ResourceType, verbose_name='Resource')
     amount = models.IntegerField()
+
+    def __unicode__(self):
+        return ''
 
 
 class Player_Building(models.Model):
+    class Meta:
+        verbose_name = 'Building'
+
     player = models.ForeignKey(Player)
-    buildingType = models.ForeignKey(BuildingType)
+    buildingType = models.ForeignKey(BuildingType, verbose_name='Building')
     quantity = models.IntegerField()
+
+    def __unicode__(self):
+        return ''
 
 
 def tick():
