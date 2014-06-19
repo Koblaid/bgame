@@ -28,7 +28,7 @@ class BuildingType(models.Model):
         obj = cls.objects.create(name=name, production=production)
         obj.save()
 
-        for res, amount in resources.iteritems():
+        for res, amount in resources.items():
             rb = BuildingType_Resource(buildingType=obj, resourceType=res, amount=amount)
             rb.save()
         return obj

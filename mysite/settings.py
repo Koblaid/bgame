@@ -4,7 +4,7 @@ from django.contrib.messages import constants as messages
 try:
     import debug_toolbar
 except:
-    print 'debug_toolbar not available!'
+    print('debug_toolbar not available!')
     debug_toolbar = None
 
 
