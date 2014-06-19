@@ -3,7 +3,7 @@
 <p>Your username and password didn't match. Please try again.</p>
 {% endif %}
 
-<form method="post" action="{% url mysite.bgame.views.custom_login %}">
+<form method="post" action="{% url "mysite.bgame.views.custom_login" %}">
 {% csrf_token %}
 <table>
 <tr>
