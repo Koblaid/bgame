@@ -74,7 +74,7 @@
 
 <hr>
 <h3>Admin actions</h3>
-<form action={% url 'mysite.bgame.views.gameadmin' %} method='POST' id='gameadmin'>
+<form action="{% url 'mysite.bgame.views.gameadmin' %}" method='POST' id='gameadmin'>
     {% csrf_token %}
     <input type="submit" name="tick" value="Tick!">
     <input type="submit" name="resetdb" value="Reset DB">
