@@ -10,8 +10,12 @@ except:
     debug_toolbar = None
 
 
-DEBUG = True
+DEBUG = bool(os.environ.get('DEBUG', False))
+if not DEBUG:
+    print('Debug mode is disabled, use the environment variable DEBUG=1 to enable it')
 TEMPLATE_DEBUG = DEBUG
+
+ALLOWED_HOSTS = '*'  # NOTE: security risk
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
