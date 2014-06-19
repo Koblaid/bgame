@@ -11,7 +11,7 @@ from mysite.bgame import models as M
 
 def index(request):
     if not request.user.is_authenticated():
-        return redirect('mysite.bgame.views.custom_login', request)
+        return redirect('mysite.bgame.views.custom_login')
     else:
         player = get_object_or_404(M.Player, user=request.user)
 
@@ -39,7 +39,7 @@ def register(request):
         user.backend='django.contrib.auth.backends.ModelBackend'
         M.Player.objects.create(name=username, user=user)
         login(request, user)
-        return redirect('mysite.bgame.views.index', request)
+        return redirect('mysite.bgame.views.index')
     else:
         return render_to_response('register.html', context_instance=RequestContext(request))
 
