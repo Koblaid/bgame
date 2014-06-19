@@ -118,7 +118,6 @@ class Player(models.Model):
     changeResourceAmount.alters_data = True
 
     def subtractResourcesForBuilding(self, buildingType):
-        assert transaction.is_managed()
         for bRes in BuildingType_Resource.objects.select_for_update().filter(buildingType=buildingType):
             result = self.changeResourceAmount(bRes.resourceType, bRes.amount*-1)
             if not result['success']:
