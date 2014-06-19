@@ -19,7 +19,7 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
-db_path = os.environ.get('SQLITE_PATH') or 'testdb.sqlite'
+db_path = os.environ.get('SQLITE_PATH','testdb.sqlite')
 print('Using db %s' % repr(db_path))
 
 DATABASES = {
