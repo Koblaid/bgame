@@ -179,7 +179,7 @@ LOGGING = {
 }
 
 
-LOGIN_REDIRECT_URL = '/game'
+LOGIN_REDIRECT_URL = 'mysite.bgame.views.index'
 
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 

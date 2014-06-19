@@ -10,7 +10,7 @@
 <h1>bgame</h1>
  <h3>Hello {{player.name}}</h3>
 
-<a href='/game'>Update</a> <a href='/logout'>Logout</a>
+<a href={% url 'mysite.bgame.views.index' %}>Update</a> <a href={% url 'django.contrib.auth.views.logout' %}>Logout</a>
 <br />
 <br />
 
@@ -46,7 +46,7 @@
 </table>
 
 <h3>New building </h3>
-<form action='/build' method='POST' id='build'>
+<form action={% url 'mysite.bgame.views.build' %} method='POST' id='build'>
     {% csrf_token %}
     <table border=1>
     {% for building in building_types|dictsort:"name" %}
@@ -74,7 +74,7 @@
 
 <hr>
 <h3>Admin actions</h3>
-<form action='/gameadmin' method='POST' id='gameadmin'>
+<form action={% url 'mysite.bgame.views.gameadmin' %} method='POST' id='gameadmin'>
     {% csrf_token %}
     <input type="submit" name="tick" value="Tick!">
     <input type="submit" name="resetdb" value="Reset DB">

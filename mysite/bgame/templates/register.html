@@ -1,5 +1,5 @@
 <h1>Registration</h1>
-<form method="post" action="/register">
+<form method="post" action="{% url 'mysite.bgame.views.register' %}">
 {% csrf_token %}
 <table>
 <tr>
@@ -18,4 +18,4 @@
 
 <input type="submit" value="register" />
 </form>
-<a href="/login">Login</a>
+<a href="{% url 'mysite.bgame.views.custom_login' %}">Login</a>
