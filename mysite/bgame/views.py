@@ -11,7 +11,7 @@ from mysite.bgame import models as M
 
 def index(request):
     if not request.user.is_authenticated():
-        return redirect('/', request)
+        return redirect('mysite.bgame.views.custom_login', request)
     else:
         player = get_object_or_404(M.Player, user=request.user)
 
@@ -26,7 +26,7 @@ def index(request):
 
 def custom_login(request):
     if request.user.is_authenticated():
-        return redirect('/game', request)
+        return redirect('mysite.bgame.views.index', request)
     else:
         return login_view(request, template_name='login.html')
 
@@ -39,7 +39,7 @@ def register(request):
         user.backend='django.contrib.auth.backends.ModelBackend'
         M.Player.objects.create(name=username, user=user)
         login(request, user)
-        return redirect('/game', request)
+        return redirect('mysite.bgame.views.index', request)
     else:
         return render_to_response('register.html', context_instance=RequestContext(request))
 
@@ -52,7 +52,7 @@ def gameadmin(request):
         M.reset()
         messages.success(request, 'DB resetted')
 
-    return redirect('/game')
+    return redirect('mysite.bgame.views.index')
 
 
 def build(request):
@@ -77,4 +77,4 @@ def build(request):
         else:
             raise Exception('Unknown reason')
 
-    return redirect('/game')
+    return redirect('mysite.bgame.views.index')
