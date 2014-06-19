@@ -26,7 +26,7 @@ def index(request):
 
 def custom_login(request):
     if request.user.is_authenticated():
-        return redirect('mysite.bgame.views.index', request)
+        return redirect('mysite.bgame.views.index')
     else:
         return login_view(request, template_name='login.html')
 
