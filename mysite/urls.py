@@ -5,7 +5,7 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
     (r'^$', 'mysite.bgame.views.custom_login'),
-    (r'^logout$', 'django.contrib.auth.views.logout', {'next_page': '/'}),
+    (r'^logout$', 'django.contrib.auth.views.logout', {'next_page': 'mysite.bgame.views.custom_login'}),
     (r'^register$', 'mysite.bgame.views.register'),
     url(r'^game$', 'mysite.bgame.views.index'),
     url(r'^build$', 'mysite.bgame.views.build'),
